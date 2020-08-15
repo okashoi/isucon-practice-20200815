@@ -1,0 +1,37 @@
+version: '3'
+
+services:
+    proxy:
+        image: lkwg82/h2o-http2-server:v2.2.6
+        volumes:
+          - "$PWD/etc/h2o:/etc/h2o"
+        ports:
+          # クソが、お前が8080持ってんじゃねえか
+          - "80:8080"
+        depends_on:
+          - db
+          - app
+
+    app:
+        build:
+            context: .
+            dockerfile: ./webapp/go/Dockerfile
+        command: "make -C webapp/go build run"
+        volumes:
+          - "$PWD/db:/opt/isucon/db"
+          - "$PWD/webapp:/opt/isucon/webapp"
+        
+    db:
+        image: mariadb:5.5
+        environment:
+            MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+            MYSQL_ROOT_PASSWORD: ""
+            MYSQL_DATABASE: "torb"
+            MYSQL_USER: "isucon"
+            MYSQL_PASSWORD: "isucon"
+        ports:
+            - "33060:3306"
+        volumes:
+          - "$PWD/db/:/docker-entrypoint-initdb.d/"
+          - "$PWD/etc/my.cnf:/etc/mysql/conf.d/my.cnf"
+          - "$PWD/etc/my.cnf.d:/etc/my.cnf.d"
