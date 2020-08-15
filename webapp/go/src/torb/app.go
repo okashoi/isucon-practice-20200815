@@ -194,33 +194,79 @@ func getEvents(all bool) ([]*Event, error) {
 	}
 	defer tx.Commit()
 
-	rows, err := tx.Query("SELECT * FROM events ORDER BY id ASC")
+	rows, err := tx.Query(`
+	SELECT evs.*, sts.rank, count(sts.rank) FROM events evs 
+	LEFT JOIN reservations rsvs on rsvs.event_id = evs.id 
+	LEFT JOIN sheets sts on sts.id = rsvs.sheet_id 
+	WHERE canceled_at IS NULL 
+	GROUP by evs.id, sts.rank 
+	ORDER BY evs.id, rank ASC
+	`)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
 	var events []*Event
+	eventsMap := map[int64]Event{}
 	for rows.Next() {
 		var event Event
-		if err := rows.Scan(&event.ID, &event.Title, &event.PublicFg, &event.ClosedFg, &event.Price); err != nil {
+		var rank sql.NullString
+		var reservations sql.NullInt64
+		if err := rows.Scan(&event.ID, &event.Title, &event.PublicFg, &event.ClosedFg, &event.Price, &rank, &reservations); err != nil {
 			return nil, err
 		}
 		if !all && !event.PublicFg {
 			continue
 		}
-		events = append(events, &event)
-	}
-	for i, v := range events {
-		event, err := getEvent(v.ID, -1)
-		if err != nil {
-			return nil, err
+		oldEvent, exist := eventsMap[event.ID]
+		if !exist {
+			// 決め打ち
+			event.Sheets = map[string]*Sheets{
+				"S": &Sheets{
+					Price:   event.Price + 5000,
+					Total:   50,
+					Remains: 50,
+				},
+				"A": &Sheets{
+					Price:   event.Price + 3000,
+					Total:   150,
+					Remains: 150,
+				},
+				"B": &Sheets{
+					Price:   event.Price + 1000,
+					Total:   300,
+					Remains: 300,
+				},
+				"C": &Sheets{
+					Price:   event.Price + 0,
+					Total:   500,
+					Remains: 500,
+				},
+			}
+
+			oldEvent = event
+			// sheetsは変わらないので決め打ち
+			oldEvent.Total = 1000
+			oldEvent.Remains = 1000
 		}
-		for k := range event.Sheets {
-			event.Sheets[k].Detail = nil
+		if rank.Valid {
+			oldEvent.Sheets[rank.String].Remains = oldEvent.Sheets[rank.String].Total - int(reservations.Int64)
+			oldEvent.Remains -= int(reservations.Int64)
 		}
-		events[i] = event
+
+		eventsMap[event.ID] = oldEvent
 	}
+
+	for key := range eventsMap {
+		v, _ := eventsMap[key]
+		events = append(events, &v)
+	}
+
+	sort.Slice(events, func(i, j int) bool {
+		return events[i].ID < events[j].ID
+	})
+
 	return events, nil
 }
 
