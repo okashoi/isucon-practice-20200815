@@ -309,6 +309,14 @@ func (r *Renderer) Render(w io.Writer, name string, data interface{}, c echo.Con
 
 var db *sql.DB
 
+// https://stackoverrun.com/ja/q/11104843
+func getEnv(key, fallback string) string {
+	if value, ok := os.LookupEnv(key); ok {
+		return value
+	}
+	return fallback
+}
+
 func main() {
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true&charset=utf8mb4",
 		os.Getenv("DB_USER"), os.Getenv("DB_PASS"),
@@ -913,7 +921,7 @@ func main() {
 		return renderReportCSV(c, reports)
 	}, adminLoginRequired)
 
-	e.Start(":8080")
+	e.Start(getEnv("GO_PORT", ":8081"))
 }
 
 type Report struct {

@@ -4,7 +4,7 @@ services:
     proxy:
         image: lkwg82/h2o-http2-server:v2.2.6
         volumes:
-          - "$PWD/etc/h2o:/etc/h2o"
+          - "$PWD/etc/h2o/h2o.conf.docker:/etc/h2o/h2o.conf"
         ports:
           # クソが、お前が8080持ってんじゃねえか
           - "80:8080"
@@ -17,6 +17,8 @@ services:
             context: .
             dockerfile: ./webapp/go/Dockerfile
         command: "make -C webapp/go build run"
+        environment:
+          GO_PORT: ":8081"
         volumes:
           - "$PWD/db:/opt/isucon/db"
           - "$PWD/webapp:/opt/isucon/webapp"
