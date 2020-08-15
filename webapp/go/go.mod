@@ -13,6 +13,7 @@ require (
 	github.com/labstack/echo v0.0.0-20180907145804-688ab2bec63f
 	github.com/labstack/echo-contrib v0.0.0-20180303034000-93dd5f30d581
 	github.com/labstack/gommon v0.0.0-20180708002642-2a618302b929
+	github.com/matsuu/kataribe v0.4.1 // indirect
 	github.com/mattn/go-colorable v0.1.4
 	github.com/mattn/go-isatty v0.0.11
 	github.com/uber/go-torch v0.0.0-20181107071353-86f327cc820e // indirect

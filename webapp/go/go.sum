@@ -1,3 +1,5 @@
+github.com/BurntSushi/toml v0.3.1 h1:WXkYYl6Yr3qBf1K79EBnL4mak0OimBfB0XUf9Vl28OQ=
+github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/dgrijalva/jwt-go v0.0.0-20180719211823-0b96aaa70776/go.mod h1:E3ru+11k8xSBh+hMPgOLZmtrrCbhqsmaPHjLKYnJCaQ=
 github.com/dgrijalva/jwt-go v3.2.0+incompatible h1:7qlOGliEKZXTDg6OTjfoBKDXWrumCAMpl/TFQ4/5kLM=
@@ -23,6 +25,8 @@ github.com/labstack/echo-contrib v0.0.0-20180303034000-93dd5f30d581/go.mod h1:Lx
 github.com/labstack/gommon v0.0.0-20180312174116-6fe1405d73ec/go.mod h1:/tj9csK2iPSBvn+3NLM9e52usepMtrd5ilFYA+wQNJ4=
 github.com/labstack/gommon v0.0.0-20180708002642-2a618302b929 h1:WOLGzWN2NPycx2z0d07Ika0V5SF3XnOYx09tAlhUdX4=
 github.com/labstack/gommon v0.0.0-20180708002642-2a618302b929/go.mod h1:/tj9csK2iPSBvn+3NLM9e52usepMtrd5ilFYA+wQNJ4=
+github.com/matsuu/kataribe v0.4.1 h1:m73F2A3Byt4xkiVxgRz4O9ZicXm0xgCPwdClR8a7Bdg=
+github.com/matsuu/kataribe v0.4.1/go.mod h1:tL1iiWMPk1rWwpYA2ljLJJ8hqRm455UQmIxMK9pmUSo=
 github.com/mattn/go-colorable v0.0.0-20180310133214-efa589957cd0/go.mod h1:9vuHe8Xs5qXnSaW/c/ABM9alt+Vo+STaOChaDxuIBZU=
 github.com/mattn/go-colorable v0.0.9 h1:UVL0vNpWh04HeJXV0KLcaT7r06gOH2l4OW6ddYRUIY4=
 github.com/mattn/go-colorable v0.0.9/go.mod h1:9vuHe8Xs5qXnSaW/c/ABM9alt+Vo+STaOChaDxuIBZU=
