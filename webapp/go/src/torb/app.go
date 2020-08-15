@@ -921,7 +921,7 @@ func main() {
 		return renderReportCSV(c, reports)
 	}, adminLoginRequired)
 
-	e.Start(getEnv("GO_PORT", ":8081"))
+	e.Start(getEnv("GO_PORT", ":8080"))
 }
 
 type Report struct {
