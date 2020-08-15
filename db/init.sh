@@ -18,3 +18,10 @@ fi
 mysql -uisucon torb -e 'ALTER TABLE reservations DROP KEY event_id_and_sheet_id_idx'
 gzip -dc "$DB_DIR/isucon8q-initial-dataset.sql.gz" | mysql -uisucon torb
 mysql -uisucon torb -e 'ALTER TABLE reservations ADD KEY event_id_and_sheet_id_idx (event_id, sheet_id)'
+
+mysql -uisucon -pisucon << EOF
+set global slow_query_log_file = '/var/log/mariadb/slow.log';
+set global long_query_time = 0.1;
+set global slow_query_log = ON;
+set global log_queries_not_using_indexes = ON;
+EOF
