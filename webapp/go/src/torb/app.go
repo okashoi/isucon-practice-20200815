@@ -224,6 +224,15 @@ func getEvents(all bool) ([]*Event, error) {
 	return events, nil
 }
 
+func getEventSummaryForReservationOperation(eventID int64) (*Event, error) {
+	var event Event
+	if err := db.QueryRow("SELECT public_fg FROM events WHERE id = ?", eventID).Scan(&event.PublicFg); err != nil {
+		return nil, err
+	}
+
+	return &event, nil
+}
+
 func getEvent(eventID, loginUserID int64) (*Event, error) {
 	var event Event
 	if err := db.QueryRow("SELECT * FROM events WHERE id = ?", eventID).Scan(&event.ID, &event.Title, &event.PublicFg, &event.ClosedFg, &event.Price); err != nil {
@@ -297,9 +306,7 @@ func fillinAdministrator(next echo.HandlerFunc) echo.HandlerFunc {
 }
 
 func validateRank(rank string) bool {
-	var count int
-	db.QueryRow("SELECT COUNT(*) FROM sheets WHERE `rank` = ?", rank).Scan(&count)
-	return count > 0
+	return rank == "A" || rank == "B" || rank == "C" || rank == "S"
 }
 
 type Renderer struct {
@@ -588,7 +595,11 @@ func main() {
 			return err
 		}
 
-		event, err := getEvent(eventID, user.ID)
+		if !validateRank(params.Rank) {
+			return resError(c, "invalid_rank", 400)
+		}
+
+		event, err := getEventSummaryForReservationOperation(eventID)
 		if err != nil {
 			if err == sql.ErrNoRows {
 				return resError(c, "invalid_event", 404)
@@ -598,14 +609,10 @@ func main() {
 			return resError(c, "invalid_event", 404)
 		}
 
-		if !validateRank(params.Rank) {
-			return resError(c, "invalid_rank", 400)
-		}
-
 		var sheet Sheet
 		var reservationID int64
 		for {
-			if err := db.QueryRow("SELECT * FROM sheets WHERE id NOT IN (SELECT sheet_id FROM reservations WHERE event_id = ? AND canceled_at IS NULL FOR UPDATE) AND `rank` = ? ORDER BY RAND() LIMIT 1", event.ID, params.Rank).Scan(&sheet.ID, &sheet.Rank, &sheet.Num, &sheet.Price); err != nil {
+			if err := db.QueryRow("SELECT * FROM sheets WHERE id NOT IN (SELECT sheet_id FROM reservations WHERE event_id = ? AND canceled_at IS NULL FOR UPDATE) AND `rank` = ? ORDER BY RAND() LIMIT 1", eventID, params.Rank).Scan(&sheet.ID, &sheet.Rank, &sheet.Num, &sheet.Price); err != nil {
 				if err == sql.ErrNoRows {
 					return resError(c, "sold_out", 409)
 				}
@@ -617,7 +624,7 @@ func main() {
 				return err
 			}
 
-			res, err := tx.Exec("INSERT INTO reservations (event_id, sheet_id, user_id, reserved_at) VALUES (?, ?, ?, ?)", event.ID, sheet.ID, user.ID, time.Now().UTC().Format("2006-01-02 15:04:05.000000"))
+			res, err := tx.Exec("INSERT INTO reservations (event_id, sheet_id, user_id, reserved_at) VALUES (?, ?, ?, ?)", eventID, sheet.ID, user.ID, time.Now().UTC().Format("2006-01-02 15:04:05.000000"))
 			if err != nil {
 				tx.Rollback()
 				log.Println("re-try: rollback by", err)
@@ -656,7 +663,11 @@ func main() {
 			return err
 		}
 
-		event, err := getEvent(eventID, user.ID)
+		if !validateRank(rank) {
+			return resError(c, "invalid_rank", 404)
+		}
+
+		event, err := getEventSummaryForReservationOperation(eventID)
 		if err != nil {
 			if err == sql.ErrNoRows {
 				return resError(c, "invalid_event", 404)
@@ -664,10 +675,6 @@ func main() {
 			return err
 		} else if !event.PublicFg {
 			return resError(c, "invalid_event", 404)
-		}
-
-		if !validateRank(rank) {
-			return resError(c, "invalid_rank", 404)
 		}
 
 		var sheet Sheet
@@ -684,7 +691,7 @@ func main() {
 		}
 
 		var reservation Reservation
-		if err := tx.QueryRow("SELECT * FROM reservations WHERE event_id = ? AND sheet_id = ? AND canceled_at IS NULL GROUP BY event_id HAVING reserved_at = MIN(reserved_at) FOR UPDATE", event.ID, sheet.ID).Scan(&reservation.ID, &reservation.EventID, &reservation.SheetID, &reservation.UserID, &reservation.ReservedAt, &reservation.CanceledAt); err != nil {
+		if err := tx.QueryRow("SELECT * FROM reservations WHERE event_id = ? AND sheet_id = ? AND canceled_at IS NULL GROUP BY event_id HAVING reserved_at = MIN(reserved_at) FOR UPDATE", eventID, sheet.ID).Scan(&reservation.ID, &reservation.EventID, &reservation.SheetID, &reservation.UserID, &reservation.ReservedAt, &reservation.CanceledAt); err != nil {
 			tx.Rollback()
 			if err == sql.ErrNoRows {
 				return resError(c, "not_reserved", 400)
