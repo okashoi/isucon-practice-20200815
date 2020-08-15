@@ -16,3 +16,7 @@ race:
 clean:
 	rm -f isucon8q-initial-dataset.sql.gz
 	go clean -r -n -x -cache -testcache
+
+prepare/bench: build
+	go build -o gen-initial-dataset src/cmd/gen-initial-dataset/main.go 
+	./gen-initial-dataset
