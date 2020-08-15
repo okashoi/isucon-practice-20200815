@@ -19,5 +19,5 @@ hosts:
       "/js":
         file.dir: /opt/webapp/static/js
       "/":
-        proxy.reverse.url: http://127.0.0.1:8081/
+        proxy.reverse.url: http://app:8081/
         proxy.preserve-host: ON
