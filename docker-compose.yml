@@ -17,9 +17,10 @@ services:
         build:
             context: .
             dockerfile: ./webapp/go/Dockerfile
-        command: "make -C webapp/go build run"
+        command: "make -C webapp/go build run/docker"
         environment:
           GO_PORT: ":8081"
+          GO_INIT: "../../db/init-docker.sh"
         volumes:
           - "$PWD/db:/opt/isucon/db"
           - "$PWD/webapp:/opt/isucon/webapp"

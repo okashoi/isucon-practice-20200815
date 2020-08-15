@@ -10,3 +10,6 @@ build:
 
 run: build
 	../env.sh && ./torb
+
+run/docker: build
+	./run_docker.sh
