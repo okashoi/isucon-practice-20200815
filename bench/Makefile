@@ -9,6 +9,10 @@ build-linux:
 	GOOS=linux GOARCH=amd64 go install ./src/cmd/...
 	mv bin/linux_amd64/bench bin.Linux.x86_64/bench
 
+build-osx:
+	GOOS=darwin GOARCH=amd64 go install ./src/cmd/...
+	mv ${GOPATH}/bin/darwin_amd64/bench bin.Darwin.x86_64/bench
+
 .PHONY: race
 race:
 	go install -race ./src/cmd/...
