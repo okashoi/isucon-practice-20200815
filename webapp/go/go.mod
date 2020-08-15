@@ -11,6 +11,7 @@ require (
 	github.com/labstack/echo v0.0.0-20180907145804-688ab2bec63f
 	github.com/labstack/echo-contrib v0.0.0-20180303034000-93dd5f30d581
 	github.com/labstack/gommon v0.0.0-20180708002642-2a618302b929
+	github.com/matsuu/kataribe v0.4.1 // indirect
 	github.com/mattn/go-colorable v0.0.9
 	github.com/mattn/go-isatty v0.0.3
 	github.com/valyala/bytebufferpool v0.0.0-20160817181652-e746df99fe4a
