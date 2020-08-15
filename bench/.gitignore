@@ -3,3 +3,4 @@ pkg
 vendor
 cache/*.gob
 gen-initial-dataset
+bin.Darwin.x86_64/bench
