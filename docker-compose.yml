@@ -36,8 +36,6 @@ services:
         ports:
             - "33060:3306"
         volumes:
-          - "$PWD/db/001_run-for-docker.sh:/docker-entrypoint-initdb.d/001_run-for-docker.sh"
-          - "$PWD/db/init-user.sh:/opt/migration/init-user.sh"
           - "$PWD/etc/my.docker.cnf:/etc/mysql/conf.d/my.cnf"
           - "$PWD/etc/my.cnf.d:/etc/my.cnf.d"
 
