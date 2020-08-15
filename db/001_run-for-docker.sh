@@ -1,3 +1,3 @@
 #!/bin/bash
 
-sh ./init-user.sh
+sh /docker-entrypoint-initdb.d/init-user.sh
