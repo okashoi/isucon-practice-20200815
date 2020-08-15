@@ -5,6 +5,7 @@ services:
         image: lkwg82/h2o-http2-server:v2.2.6
         volumes:
           - "$PWD/etc/h2o/h2o.conf.docker:/etc/h2o/h2o.conf"
+          - "$PWD/webapp/static:/opt/webapp/static"
         ports:
           # クソが、お前が8080持ってんじゃねえか
           - "80:8080"
