@@ -8,7 +8,10 @@ server/docker/run: setup/seed
 	docker-compose up -d
 
 server/docker/stop:
-	docker-compose stop
+	docker-compose stop --remove-orphans
+
+server/docker/down:
+	docker-compose down
 
 server/docker/logs:
 	docker-compose logs -f
