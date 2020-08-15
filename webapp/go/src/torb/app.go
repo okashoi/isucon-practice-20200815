@@ -851,11 +851,10 @@ func main() {
 			return err
 		}
 
-		e, err := getEvent(eventID, -1)
-		if err != nil {
-			return err
-		}
-		c.JSON(200, e)
+		event.PublicFg = params.Public
+		event.ClosedFg = params.Closed
+
+		c.JSON(200, event)
 		return nil
 	}, adminLoginRequired)
 	e.GET("/admin/api/reports/events/:id/sales", func(c echo.Context) error {
