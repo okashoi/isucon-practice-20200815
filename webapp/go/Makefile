@@ -13,3 +13,6 @@ run: build
 
 run/docker: build
 	./run_docker.sh
+
+fmt:
+	go fmt ./src/torb && goimports -w ./src/torb
