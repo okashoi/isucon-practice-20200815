@@ -40,3 +40,11 @@ services:
           - "$PWD/db/init-user.sh:/opt/migration/init-user.sh"
           - "$PWD/etc/my.docker.cnf:/etc/mysql/conf.d/my.cnf"
           - "$PWD/etc/my.cnf.d:/etc/my.cnf.d"
+
+    bench:
+        build:
+            context: .
+            dockerfile: ./webapp/go/Dockerfile
+        command: "make build-osx"
+        volumes:
+          - "$PWD/bench:/opt/isucon/"
