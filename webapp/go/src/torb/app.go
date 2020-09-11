@@ -187,40 +187,97 @@ func getLoginAdministrator(c echo.Context) (*Administrator, error) {
 	return &administrator, err
 }
 
-func getEvents(all bool) ([]*Event, error) {
+func getEvents(onlyPublic bool, sanitize bool) ([]*Event, error) {
 	tx, err := db.Begin()
 	if err != nil {
 		return nil, err
 	}
 	defer tx.Commit()
 
-	rows, err := tx.Query("SELECT * FROM events ORDER BY id ASC")
+	shrinkEventTableQuery := ""
+	if onlyPublic {
+		shrinkEventTableQuery += "JOIN (SELECT * FROM events WHERE public_fg = 1) as e on e.id = evs.id "
+	}
+
+	rows, err := tx.Query(`
+	SELECT evs.*, sts.rank, count(sts.rank) FROM events evs 
+	` + shrinkEventTableQuery +
+		`
+	LEFT JOIN reservations rsvs on rsvs.event_id = evs.id 
+	LEFT JOIN sheets sts on sts.id = rsvs.sheet_id 
+	WHERE canceled_at IS NULL 
+	GROUP by evs.id, sts.rank 
+	ORDER BY evs.id, rank ASC
+	`)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
 	var events []*Event
+	eventsMap := map[int64]Event{}
 	for rows.Next() {
 		var event Event
-		if err := rows.Scan(&event.ID, &event.Title, &event.PublicFg, &event.ClosedFg, &event.Price); err != nil {
+		var rank sql.NullString
+		var reservations sql.NullInt64
+		if err := rows.Scan(&event.ID, &event.Title, &event.PublicFg, &event.ClosedFg, &event.Price, &rank, &reservations); err != nil {
 			return nil, err
 		}
-		if !all && !event.PublicFg {
-			continue
+		oldEvent, exist := eventsMap[event.ID]
+		if !exist {
+			// 決め打ち
+			event.Sheets = map[string]*Sheets{
+				"S": &Sheets{
+					Price:   event.Price + 5000,
+					Total:   50,
+					Remains: 50,
+				},
+				"A": &Sheets{
+					Price:   event.Price + 3000,
+					Total:   150,
+					Remains: 150,
+				},
+				"B": &Sheets{
+					Price:   event.Price + 1000,
+					Total:   300,
+					Remains: 300,
+				},
+				"C": &Sheets{
+					Price:   event.Price + 0,
+					Total:   500,
+					Remains: 500,
+				},
+			}
+
+			oldEvent = event
+			// sheetsは変わらないので決め打ち
+			oldEvent.Total = 1000
+			oldEvent.Remains = 1000
 		}
-		events = append(events, &event)
+		if rank.Valid {
+			oldEvent.Sheets[rank.String].Remains = oldEvent.Sheets[rank.String].Total - int(reservations.Int64)
+			oldEvent.Remains -= int(reservations.Int64)
+		}
+
+		eventsMap[event.ID] = oldEvent
 	}
-	for i, v := range events {
-		event, err := getEvent(v.ID, -1)
-		if err != nil {
-			return nil, err
+
+	if sanitize {
+		for key := range eventsMap {
+			v, _ := eventsMap[key]
+			events = append(events, sanitizeEvent(&v))
 		}
-		for k := range event.Sheets {
-			event.Sheets[k].Detail = nil
+	} else {
+		for key := range eventsMap {
+			v, _ := eventsMap[key]
+			events = append(events, &v)
 		}
-		events[i] = event
 	}
+
+	sort.Slice(events, func(i, j int) bool {
+		return events[i].ID < events[j].ID
+	})
+
 	return events, nil
 }
 
@@ -351,12 +408,9 @@ func main() {
 	e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{Output: os.Stderr}))
 	e.Static("/", "public")
 	e.GET("/", func(c echo.Context) error {
-		events, err := getEvents(false)
+		events, err := getEvents(true, true)
 		if err != nil {
 			return err
-		}
-		for i, v := range events {
-			events[i] = sanitizeEvent(v)
 		}
 		return c.Render(200, "index.tmpl", echo.Map{
 			"events": events,
@@ -542,12 +596,9 @@ func main() {
 		return c.NoContent(204)
 	}, loginRequired)
 	e.GET("/api/events", func(c echo.Context) error {
-		events, err := getEvents(true)
+		events, err := getEvents(false, true)
 		if err != nil {
 			return err
-		}
-		for i, v := range events {
-			events[i] = sanitizeEvent(v)
 		}
 		return c.JSON(200, events)
 	})
@@ -712,7 +763,7 @@ func main() {
 		administrator := c.Get("administrator")
 		if administrator != nil {
 			var err error
-			if events, err = getEvents(true); err != nil {
+			if events, err = getEvents(false, false); err != nil {
 				return err
 			}
 		}
@@ -757,7 +808,7 @@ func main() {
 		return c.NoContent(204)
 	}, adminLoginRequired)
 	e.GET("/admin/api/events", func(c echo.Context) error {
-		events, err := getEvents(true)
+		events, err := getEvents(false, false)
 		if err != nil {
 			return err
 		}
